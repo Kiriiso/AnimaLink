@@ -1,0 +1,77 @@
+version: '3.8'
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: vet
+    ports:
+      - 3306:3306
+    volumes:
+      - db-data:/var/lib/mysql
+
+  api-gateway:
+    build: ./api-gateway/api-gateway
+    ports:
+      - 8080:8080
+    depends_on:
+      - mysql
+
+  auth_service:
+    build: ./auth_service/auth_service
+    ports:
+      - 8081:8081
+    depends_on:
+      - mysql
+
+  users_service:
+    build: ./users_service/users_service
+    ports:
+      - 8082:8082
+    depends_on:
+      - mysql
+
+  cliente_service:
+    build: ./cliente_service/cliente_service
+    ports:
+      - 8083:8083
+    depends_on:
+      - mysql
+
+  pets_service:
+    build: ./pets_service/pets_service
+    ports:
+      - 8084:8084
+    depends_on:
+      - mysql
+
+  appointment_service:
+    build: ./appointment_service/appointment_service
+    ports:
+      - 8085:8085
+    depends_on:
+      - mysql
+
+  factura_service:
+    build: ./factura_service/factura_service
+    ports:
+      - 8086:8086
+    depends_on:
+      - mysql
+
+  inventory_service:
+    build: ./inventory_service/inventory_service
+    ports:
+      - 8087:8087
+    depends_on:
+      - mysql
+
+  notifications_service:
+    build: ./notifications_service/notifications_service
+    ports:
+      - 8088:8088
+    depends_on:
+      - mysql
+
+volumes:
+  db-data:
