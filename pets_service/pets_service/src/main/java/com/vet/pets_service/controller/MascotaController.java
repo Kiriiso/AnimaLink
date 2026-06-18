@@ -1,7 +1,9 @@
-package com.vet.pets_service.controller;
+﻿package com.vet.pets_service.controller;
 
-import com.vet.pets_service.model.Mascota;
-import com.vet.pets_service.service.MascotaService;
+import com.vet.pets_service.dto.MascotaRequestDTO;
+import com.vet.pets_service.dto.MascotaResponseDTO;
+import com.vet.pets_service.service.impl.MascotaServiceImpl;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -9,36 +11,39 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/pets")
+@RequestMapping("/mascotas")
 public class MascotaController {
 
-    private final MascotaService service;
+    private final MascotaServiceImpl service;
 
-    public MascotaController(MascotaService service) {
+    public MascotaController(MascotaServiceImpl service) {
         this.service = service;
     }
 
     @GetMapping
-    public ResponseEntity<List<Mascota>> all() {
-        return ResponseEntity.ok(service.findByClienteId(null));
+    public ResponseEntity<List<MascotaResponseDTO>> findAll() {
+        return ResponseEntity.ok(service.findAllDTO());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Mascota> get(@PathVariable Long id) {
-        Mascota m = service.findById(id);
-        if (m == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(m);
-    }
-
-    @GetMapping("/cliente/{clienteId}")
-    public ResponseEntity<List<Mascota>> byCliente(@PathVariable Long clienteId) {
-        return ResponseEntity.ok(service.findByClienteId(clienteId));
+    public ResponseEntity<MascotaResponseDTO> findById(@PathVariable Long id) {
+        return ResponseEntity.ok(service.findByIdDTO(id));
     }
 
     @PostMapping
-    public ResponseEntity<Mascota> create(@RequestBody Mascota mascota) {
-        Mascota saved = service.save(mascota);
-        return ResponseEntity.created(URI.create("/pets/" + saved.getId())).body(saved);
+    public ResponseEntity<MascotaResponseDTO> create(@Valid @RequestBody MascotaRequestDTO request) {
+        MascotaResponseDTO saved = service.saveDTO(request);
+        return ResponseEntity.created(URI.create("/mascotas/" + saved.getId())).body(saved);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<MascotaResponseDTO> update(@PathVariable Long id, @Valid @RequestBody MascotaRequestDTO request) {
+        return ResponseEntity.ok(service.updateDTO(id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        service.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
 }

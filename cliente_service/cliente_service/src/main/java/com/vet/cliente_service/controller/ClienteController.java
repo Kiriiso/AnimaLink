@@ -1,7 +1,9 @@
-package com.vet.cliente_service.controller;
+﻿package com.vet.cliente_service.controller;
 
-import com.vet.cliente_service.model.Cliente;
-import com.vet.cliente_service.service.ClienteService;
+import com.vet.cliente_service.dto.ClienteRequestDTO;
+import com.vet.cliente_service.dto.ClienteResponseDTO;
+import com.vet.cliente_service.service.impl.ClienteServiceImpl;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,28 +14,36 @@ import java.util.List;
 @RequestMapping("/clientes")
 public class ClienteController {
 
-    private final ClienteService service;
+    private final ClienteServiceImpl service;
 
-    public ClienteController(ClienteService service) {
+    public ClienteController(ClienteServiceImpl service) {
         this.service = service;
     }
 
     @GetMapping
-    public ResponseEntity<List<Cliente>> all() {
-        return ResponseEntity.ok(service.findAll());
+    public ResponseEntity<List<ClienteResponseDTO>> findAll() {
+        return ResponseEntity.ok(service.findAllDTO());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Cliente> get(@PathVariable Long id) {
-        Cliente c = service.findById(id);
-        if (c == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(c);
+    public ResponseEntity<ClienteResponseDTO> findById(@PathVariable Long id) {
+        return ResponseEntity.ok(service.findByIdDTO(id));
     }
 
     @PostMapping
-    public ResponseEntity<Cliente> create(@RequestBody Cliente cliente) {
-        Cliente saved = service.save(cliente);
+    public ResponseEntity<ClienteResponseDTO> create(@Valid @RequestBody ClienteRequestDTO request) {
+        ClienteResponseDTO saved = service.saveDTO(request);
         return ResponseEntity.created(URI.create("/clientes/" + saved.getId())).body(saved);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<ClienteResponseDTO> update(@PathVariable Long id, @Valid @RequestBody ClienteRequestDTO request) {
+        return ResponseEntity.ok(service.updateDTO(id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        service.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
 }

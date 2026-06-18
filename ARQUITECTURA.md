@@ -326,3 +326,311 @@ vet-animalink/
 4. Definir los clientes REST entre `appointment_service` ↔ `pets_service` / `cliente_service`.
 5. Levantar `docker-compose.yml` con MySQL + servicios + frontend.
 6. Documentar cada API con Swagger y centralizar el contrato en una colección Postman/Bruno.
+
+---
+
+## 13. Contratos REST Implementados (v1.0)
+
+### 13.1 cliente_service (Puerto 8083)
+
+#### Crear Cliente
+```
+POST /clientes
+Content-Type: application/json
+
+Request:
+{
+  "nombre": "Juan",
+  "apellido": "Pérez",
+  "email": "juan@example.com",
+  "telefono": "123456789",
+  "direccion": "Calle Principal 123",
+  "dni": "12345678A"
+}
+
+Response: 201 Created
+{
+  "id": 1,
+  "nombre": "Juan",
+  "apellido": "Pérez",
+  "email": "juan@example.com",
+  "telefono": "123456789",
+  "direccion": "Calle Principal 123",
+  "dni": "12345678A",
+  "fechaRegistro": "2026-06-15T16:57:58"
+}
+```
+
+#### Obtener Todos los Clientes
+```
+GET /clientes
+
+Response: 200 OK
+[
+  { id: 1, nombre: "Juan", ... },
+  { id: 2, nombre: "María", ... }
+]
+```
+
+#### Obtener Cliente por ID
+```
+GET /clientes/{id}
+
+Response: 200 OK
+{
+  "id": 1,
+  "nombre": "Juan",
+  ...
+}
+
+Response: 404 Not Found
+```
+
+### 13.2 pets_service (Puerto 8084)
+
+#### Crear Mascota
+```
+POST /pets
+Content-Type: application/json
+
+Request:
+{
+  "nombre": "Fluffy",
+  "especie": "Gato",
+  "raza": "Siamés",
+  "fechaNacimiento": "2023-01-15",
+  "peso": 4.5,
+  "clienteId": 1
+}
+
+Response: 201 Created
+{
+  "id": 1,
+  "nombre": "Fluffy",
+  "especie": "Gato",
+  "raza": "Siamés",
+  "fechaNacimiento": "2023-01-15",
+  "peso": 4.5,
+  "clienteId": 1,
+  "estado": "ACTIVO"
+}
+```
+
+#### Obtener Mascotas por Cliente
+```
+GET /pets/cliente/{clienteId}
+
+Response: 200 OK
+[
+  { id: 1, nombre: "Fluffy", clienteId: 1, ... },
+  { id: 2, nombre: "Max", clienteId: 1, ... }
+]
+```
+
+#### Obtener Mascota por ID
+```
+GET /pets/{id}
+
+Response: 200 OK
+{
+  "id": 1,
+  "nombre": "Fluffy",
+  ...
+}
+```
+
+### 13.3 appointment_service (Puerto 8085)
+
+#### Clientes REST para Integración
+
+**ClienteClient.java:**
+```java
+public Object getClienteById(Long id) {
+    String url = "http://localhost:8083/clientes/" + id;
+    return rest.getForObject(url, Object.class);
+}
+```
+
+**PetsClient.java:**
+```java
+public Object getPetById(Long id) {
+    String url = "http://localhost:8084/pets/" + id;
+    return rest.getForObject(url, Object.class);
+}
+```
+
+### 13.4 api-gateway (Puerto 8080)
+
+#### Proxy GET a cliente_service
+```
+GET /api/clientes/{id}
+Proxy a: http://localhost:8083/clientes/{id}
+
+Response: 200 OK
+{ id: 1, nombre: "Juan", ... }
+```
+
+#### Proxy GET a pets_service
+```
+GET /api/pets/{id}
+Proxy a: http://localhost:8084/pets/{id}
+
+Response: 200 OK
+{ id: 1, nombre: "Fluffy", ... }
+```
+
+---
+
+## 14. DTOs Implementados
+
+### 14.1 cliente_service
+
+#### ClienteRequestDTO
+```java
+@Data
+public class ClienteRequestDTO {
+    @NotBlank(message = "Nombre is required")
+    private String nombre;
+    
+    @NotBlank(message = "Apellido is required")
+    private String apellido;
+    
+    @NotBlank(message = "Email is required")
+    @Email(message = "Email should be valid")
+    private String email;
+    
+    private String telefono;
+    private String direccion;
+    private String dni;
+}
+```
+
+#### ClienteResponseDTO
+```java
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class ClienteResponseDTO {
+    private Long id;
+    private String nombre;
+    private String apellido;
+    private String email;
+    private String telefono;
+    private String direccion;
+    private String dni;
+    private LocalDateTime fechaRegistro;
+}
+```
+
+### 14.2 pets_service
+
+#### MascotaRequestDTO
+```java
+@Data
+public class MascotaRequestDTO {
+    @NotBlank(message = "Nombre is required")
+    private String nombre;
+    
+    @NotBlank(message = "Especie is required")
+    private String especie;
+    
+    private String raza;
+    private LocalDate fechaNacimiento;
+    private Double peso;
+    
+    @NotNull(message = "ClienteId is required")
+    private Long clienteId;
+}
+```
+
+#### MascotaResponseDTO
+```java
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class MascotaResponseDTO {
+    private Long id;
+    private String nombre;
+    private String especie;
+    private String raza;
+    private LocalDate fechaNacimiento;
+    private Double peso;
+    private Long clienteId;
+    private String estado;
+}
+```
+
+---
+
+## 15. Mappers Implementados
+
+### ClienteMapper
+```java
+@Component
+public class ClienteMapper {
+    public Cliente toEntity(ClienteRequestDTO dto) { ... }
+    public ClienteResponseDTO toDTO(Cliente entity) { ... }
+    public List<ClienteResponseDTO> toDTOList(List<Cliente> entities) { ... }
+}
+```
+
+### MascotaMapper
+```java
+@Component
+public class MascotaMapper {
+    public Mascota toEntity(MascotaRequestDTO dto) { ... }
+    public MascotaResponseDTO toDTO(Mascota entity) { ... }
+    public List<MascotaResponseDTO> toDTOList(List<Mascota> entities) { ... }
+}
+```
+
+---
+
+## 16. Manejo Global de Excepciones
+
+Cada servicio implementa `GlobalExceptionHandler` que retorna:
+
+```json
+{
+  "timestamp": "2026-06-15T16:57:58",
+  "status": 400,
+  "message": "Validation failed",
+  "errors": [
+    "nombre: Nombre is required",
+    "email: Email should be valid"
+  ]
+}
+```
+
+Códigos HTTP retornados:
+- `200 OK` - Operación exitosa
+- `201 Created` - Recurso creado
+- `400 Bad Request` - Error de validación
+- `404 Not Found` - Recurso no encontrado
+- `500 Internal Server Error` - Error del servidor
+
+---
+
+## 17. Scripts de Testing y Deployment
+
+**build-all-services.ps1:** Compila todos los 10 microservicios
+**run-services.ps1:** Arranca todos los servicios en paralelo
+**smoke-test.ps1:** Realiza pruebas rápidas de conectividad
+**quick-start.ps1:** Arranca 3 servicios principales para testing
+
+Ejemplo de uso:
+```powershell
+# Compilar todos
+.\build-all-services.ps1
+
+# Probar 3 servicios principales
+.\quick-start.ps1
+
+# Esperar 15 segundos y ejecutar smoke tests
+.\smoke-test.ps1
+```
+
+---
+
+**Estado de Implementación**: Opción A Completada (2026-06-15)
+**Próxima Fase**: Implementación de Seguridad JWT y Liquibase Migrations
