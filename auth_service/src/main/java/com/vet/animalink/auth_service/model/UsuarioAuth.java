@@ -41,6 +41,7 @@ public class UsuarioAuth {
     private Rol rol;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean activo = true;
 
     @Column(name = "created_at", updatable = false)
