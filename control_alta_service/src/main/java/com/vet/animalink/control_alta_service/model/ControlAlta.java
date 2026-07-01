@@ -27,18 +27,19 @@ public class ControlAlta {
     private Long id;
 
     @Schema(description = "ID de la mascota (vive en mascota_service)", example = "5")
-    @Column(nullable = false)
+    @Column(name = "mascota_id", nullable = false)
     private Long mascotaId;
 
     @Schema(description = "Fecha y hora de ingreso", example = "2026-06-20T14:00:00")
-    @Column(nullable = false)
+    @Column(name = "fecha_ingreso", nullable = false)
     private LocalDateTime fechaIngreso;
 
     @Schema(description = "Fecha y hora de alta (null si sigue hospitalizado)")
+    @Column(name = "fecha_alta")
     private LocalDateTime fechaAlta;
 
     @Schema(description = "Motivo del ingreso", example = "Post-operatorio de cirugía")
-    @Column(nullable = false)
+    @Column(name = "motivo_ingreso", nullable = false)
     private String motivoIngreso;
 
     @Schema(description = "Estado del control", example = "HOSPITALIZADO")

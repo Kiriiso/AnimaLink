@@ -38,20 +38,30 @@ public class InsumoClient {
 
     /**
      * Descuenta 'cantidad' unidades del stock del insumo en inventario_service.
+     * Reenvía el token JWT del usuario que emite la factura (propagación de credenciales
+     * entre microservicios) porque descontar stock es una operación protegida por rol.
      * Lanza IllegalArgumentException si no hay stock suficiente (400 desde inventario).
      */
-    public void descontarStock(Long insumoId, int cantidad) {
+    public void descontarStock(Long insumoId, int cantidad, String authorizationHeader) {
         try {
             webClient.patch()
                     .uri(uriBuilder -> uriBuilder
                             .path("/api/v1/insumos/{id}/stock")
                             .queryParam("cantidad", -Math.abs(cantidad))
                             .build(insumoId))
+                    .headers(h -> {
+                        if (authorizationHeader != null && !authorizationHeader.isBlank()) {
+                            h.set("Authorization", authorizationHeader);
+                        }
+                    })
                     .retrieve()
                     .toBodilessEntity()
                     .block();
         } catch (WebClientResponseException.BadRequest e) {
             throw new IllegalArgumentException("Stock insuficiente para el insumo " + insumoId);
+        } catch (WebClientResponseException.Unauthorized | WebClientResponseException.Forbidden e) {
+            throw new IllegalArgumentException("Sin permiso para descontar stock del insumo " + insumoId
+                    + " (se requiere un token con rol autorizado)");
         }
     }
 }

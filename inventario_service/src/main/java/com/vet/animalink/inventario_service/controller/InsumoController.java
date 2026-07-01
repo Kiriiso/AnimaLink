@@ -1,5 +1,6 @@
 package com.vet.animalink.inventario_service.controller;
 
+import com.vet.animalink.inventario_service.assembler.InsumoModelAssembler;
 import com.vet.animalink.inventario_service.dto.ApiResponse;
 import com.vet.animalink.inventario_service.dto.InsumoRequest;
 import com.vet.animalink.inventario_service.dto.InsumoResponse;
@@ -9,6 +10,8 @@ import com.vet.animalink.inventario_service.service.InsumoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,27 +25,30 @@ public class InsumoController {
 
     private final InsumoService insumoService;
     private final InsumoMapper insumoMapper;
+    private final InsumoModelAssembler assembler;
 
-    public InsumoController(InsumoService insumoService, InsumoMapper insumoMapper) {
+    public InsumoController(InsumoService insumoService, InsumoMapper insumoMapper,
+                            InsumoModelAssembler assembler) {
         this.insumoService = insumoService;
         this.insumoMapper = insumoMapper;
+        this.assembler = assembler;
     }
 
-    @Operation(summary = "Listar todos los insumos")
+    @Operation(summary = "Listar todos los insumos (con enlaces HATEOAS)")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<InsumoResponse>>> listar() {
-        List<InsumoResponse> data = insumoService.listar().stream()
+    public ResponseEntity<ApiResponse<CollectionModel<EntityModel<InsumoResponse>>>> listar() {
+        List<InsumoResponse> lista = insumoService.listar().stream()
                 .map(insumoMapper::toResponse)
                 .toList();
-        String msg = data.isEmpty() ? "No hay insumos registrados" : "Se encontraron " + data.size() + " insumo(s)";
-        return ResponseEntity.ok(ApiResponse.ok(msg, data));
+        String msg = lista.isEmpty() ? "No hay insumos registrados" : "Se encontraron " + lista.size() + " insumo(s)";
+        return ResponseEntity.ok(ApiResponse.ok(msg, assembler.toCollection(lista)));
     }
 
-    @Operation(summary = "Obtener un insumo por su ID")
+    @Operation(summary = "Obtener un insumo por su ID (con enlaces HATEOAS)")
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<InsumoResponse>> obtener(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<EntityModel<InsumoResponse>>> obtener(@PathVariable Long id) {
         Insumo insumo = insumoService.obtenerPorId(id);
-        return ResponseEntity.ok(ApiResponse.ok("Insumo encontrado correctamente", insumoMapper.toResponse(insumo)));
+        return ResponseEntity.ok(ApiResponse.ok("Insumo encontrado correctamente", assembler.toModel(insumoMapper.toResponse(insumo))));
     }
 
     @Operation(summary = "Crear un nuevo insumo")

@@ -1,5 +1,6 @@
 package com.vet.animalink.factura_service.controller;
 
+import com.vet.animalink.factura_service.assembler.FacturaModelAssembler;
 import com.vet.animalink.factura_service.dto.ApiResponse;
 import com.vet.animalink.factura_service.dto.FacturaRequest;
 import com.vet.animalink.factura_service.dto.FacturaResponse;
@@ -9,6 +10,8 @@ import com.vet.animalink.factura_service.service.FacturaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,35 +25,40 @@ public class FacturaController {
 
     private final FacturaService facturaService;
     private final FacturaMapper facturaMapper;
+    private final FacturaModelAssembler assembler;
 
-    public FacturaController(FacturaService facturaService, FacturaMapper facturaMapper) {
+    public FacturaController(FacturaService facturaService, FacturaMapper facturaMapper,
+                             FacturaModelAssembler assembler) {
         this.facturaService = facturaService;
         this.facturaMapper = facturaMapper;
+        this.assembler = assembler;
     }
 
-    @Operation(summary = "Listar todas las facturas")
+    @Operation(summary = "Listar todas las facturas (con enlaces HATEOAS)")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<FacturaResponse>>> listar() {
-        List<FacturaResponse> data = facturaService.listar().stream()
+    public ResponseEntity<ApiResponse<CollectionModel<EntityModel<FacturaResponse>>>> listar() {
+        List<FacturaResponse> lista = facturaService.listar().stream()
                 .map(facturaMapper::toResponse)
                 .toList();
-        String msg = data.isEmpty() ? "No hay facturas registradas" : "Se encontraron " + data.size() + " factura(s)";
-        return ResponseEntity.ok(ApiResponse.ok(msg, data));
+        String msg = lista.isEmpty() ? "No hay facturas registradas" : "Se encontraron " + lista.size() + " factura(s)";
+        return ResponseEntity.ok(ApiResponse.ok(msg, assembler.toCollection(lista)));
     }
 
-    @Operation(summary = "Obtener una factura por su ID (incluye nombre del cliente)")
+    @Operation(summary = "Obtener una factura por su ID (incluye nombre del cliente y enlaces HATEOAS)")
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<FacturaResponse>> obtener(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<EntityModel<FacturaResponse>>> obtener(@PathVariable Long id) {
         Factura factura = facturaService.obtenerPorId(id);
         FacturaResponse data = facturaMapper.toResponse(
                 factura, facturaService.obtenerCliente(factura.getClienteId()).orElse(null));
-        return ResponseEntity.ok(ApiResponse.ok("Factura encontrada correctamente", data));
+        return ResponseEntity.ok(ApiResponse.ok("Factura encontrada correctamente", assembler.toModel(data)));
     }
 
     @Operation(summary = "Emitir una factura (valida cliente, toma precios de inventario y descuenta stock)")
     @PostMapping
-    public ResponseEntity<ApiResponse<FacturaResponse>> emitir(@Valid @RequestBody FacturaRequest request) {
-        Factura creada = facturaService.emitir(request);
+    public ResponseEntity<ApiResponse<FacturaResponse>> emitir(
+            @Valid @RequestBody FacturaRequest request,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+        Factura creada = facturaService.emitir(request, authorizationHeader);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.created("Factura emitida correctamente", facturaMapper.toResponse(creada)));
     }

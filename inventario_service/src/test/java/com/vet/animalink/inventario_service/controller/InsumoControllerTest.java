@@ -39,7 +39,8 @@ class InsumoControllerTest {
     @BeforeEach
     void setUp() {
         InsumoMapper mapper = new InsumoMapper();
-        InsumoController controller = new InsumoController(insumoService, mapper);
+        InsumoController controller = new InsumoController(insumoService, mapper,
+                new com.vet.animalink.inventario_service.assembler.InsumoModelAssembler());
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();

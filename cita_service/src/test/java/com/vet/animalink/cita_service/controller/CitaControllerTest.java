@@ -41,7 +41,8 @@ class CitaControllerTest {
     @BeforeEach
     void setUp() {
         CitaMapper mapper = new CitaMapper();
-        CitaController controller = new CitaController(citaService, mapper);
+        CitaController controller = new CitaController(citaService, mapper,
+                new com.vet.animalink.cita_service.assembler.CitaModelAssembler());
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();

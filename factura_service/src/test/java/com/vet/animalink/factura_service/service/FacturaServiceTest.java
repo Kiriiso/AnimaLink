@@ -44,12 +44,12 @@ class FacturaServiceTest {
                 .thenReturn(Optional.of(new InsumoDTO(4L, "Amoxicilina", new BigDecimal("2500"), 100)));
         when(facturaRepository.save(any(Factura.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Factura factura = facturaService.emitir(request);
+        Factura factura = facturaService.emitir(request, "Bearer token-de-prueba");
 
         assertEquals(0, factura.getTotal().compareTo(new BigDecimal("5000")));
         assertEquals(1, factura.getDetalles().size());
-        // debe descontar el stock en inventario_service
-        verify(insumoClient).descontarStock(4L, 2);
+        // debe descontar el stock en inventario_service, reenviando el token
+        verify(insumoClient).descontarStock(4L, 2, "Bearer token-de-prueba");
     }
 
     @Test
@@ -58,9 +58,9 @@ class FacturaServiceTest {
                 List.of(new FacturaRequest.ItemRequest(4L, 2)));
         when(clienteClient.obtenerCliente(99L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> facturaService.emitir(request));
+        assertThrows(ResourceNotFoundException.class, () -> facturaService.emitir(request, "Bearer x"));
         verify(facturaRepository, never()).save(any());
-        verify(insumoClient, never()).descontarStock(anyLong(), anyInt());
+        verify(insumoClient, never()).descontarStock(anyLong(), anyInt(), any());
     }
 
     @Test
@@ -71,7 +71,7 @@ class FacturaServiceTest {
                 .thenReturn(Optional.of(new ClienteDTO(3L, "María", "González")));
         when(insumoClient.obtenerInsumo(77L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> facturaService.emitir(request));
+        assertThrows(ResourceNotFoundException.class, () -> facturaService.emitir(request, "Bearer x"));
         verify(facturaRepository, never()).save(any());
     }
 

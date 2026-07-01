@@ -48,13 +48,14 @@ public class Mascota {
     private Sexo sexo;
 
     @Schema(description = "Fecha de nacimiento", example = "2020-05-12")
+    @Column(name = "fecha_nacimiento")
     private LocalDate fechaNacimiento;
 
     @Schema(description = "Color del pelaje", example = "Café")
     private String color;
 
     @Schema(description = "ID del cliente dueño (vive en cliente_service)", example = "3")
-    @Column(nullable = false)
+    @Column(name = "cliente_id", nullable = false)
     private Long clienteId;
 
     @Schema(description = "Indica si la mascota está activa", example = "true")

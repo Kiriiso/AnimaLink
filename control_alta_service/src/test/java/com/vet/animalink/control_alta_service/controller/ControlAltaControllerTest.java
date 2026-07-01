@@ -41,7 +41,8 @@ class ControlAltaControllerTest {
     @BeforeEach
     void setUp() {
         ControlAltaMapper mapper = new ControlAltaMapper();
-        ControlAltaController controller = new ControlAltaController(controlAltaService, mapper);
+        ControlAltaController controller = new ControlAltaController(controlAltaService, mapper,
+                new com.vet.animalink.control_alta_service.assembler.ControlAltaModelAssembler());
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();

@@ -27,7 +27,7 @@ public class Historial {
     private Long id;
 
     @Schema(description = "ID de la mascota (vive en mascota_service)", example = "5")
-    @Column(nullable = false)
+    @Column(name = "mascota_id", nullable = false)
     private Long mascotaId;
 
     @Schema(description = "Fecha de la atención", example = "2026-06-20")

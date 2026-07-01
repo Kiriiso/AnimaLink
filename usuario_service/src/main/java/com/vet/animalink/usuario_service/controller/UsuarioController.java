@@ -1,5 +1,6 @@
 package com.vet.animalink.usuario_service.controller;
 
+import com.vet.animalink.usuario_service.assembler.UsuarioModelAssembler;
 import com.vet.animalink.usuario_service.dto.ApiResponse;
 import com.vet.animalink.usuario_service.dto.UsuarioRequest;
 import com.vet.animalink.usuario_service.dto.UsuarioResponse;
@@ -9,6 +10,8 @@ import com.vet.animalink.usuario_service.service.UsuarioService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,28 +25,31 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
     private final UsuarioMapper usuarioMapper;
+    private final UsuarioModelAssembler assembler;
 
-    public UsuarioController(UsuarioService usuarioService, UsuarioMapper usuarioMapper) {
+    public UsuarioController(UsuarioService usuarioService, UsuarioMapper usuarioMapper,
+                             UsuarioModelAssembler assembler) {
         this.usuarioService = usuarioService;
         this.usuarioMapper = usuarioMapper;
+        this.assembler = assembler;
     }
 
-    @Operation(summary = "Listar todos los usuarios")
+    @Operation(summary = "Listar todos los usuarios (con enlaces HATEOAS)")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<UsuarioResponse>>> listar() {
-        List<UsuarioResponse> data = usuarioService.listar().stream()
+    public ResponseEntity<ApiResponse<CollectionModel<EntityModel<UsuarioResponse>>>> listar() {
+        List<UsuarioResponse> lista = usuarioService.listar().stream()
                 .map(usuarioMapper::toResponse)
                 .toList();
-        String msg = data.isEmpty() ? "No hay usuarios registrados" : "Se encontraron " + data.size() + " usuario(s)";
-        return ResponseEntity.ok(ApiResponse.ok(msg, data));
+        String msg = lista.isEmpty() ? "No hay usuarios registrados" : "Se encontraron " + lista.size() + " usuario(s)";
+        return ResponseEntity.ok(ApiResponse.ok(msg, assembler.toCollection(lista)));
     }
 
-    @Operation(summary = "Obtener un usuario por su ID")
+    @Operation(summary = "Obtener un usuario por su ID (con enlaces HATEOAS)")
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<UsuarioResponse>> obtener(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<EntityModel<UsuarioResponse>>> obtener(@PathVariable Long id) {
         Usuario usuario = usuarioService.obtenerPorId(id);
         return ResponseEntity.ok(
-                ApiResponse.ok("Usuario encontrado correctamente", usuarioMapper.toResponse(usuario)));
+                ApiResponse.ok("Usuario encontrado correctamente", assembler.toModel(usuarioMapper.toResponse(usuario))));
     }
 
     @Operation(summary = "Crear un nuevo usuario/funcionario")

@@ -31,7 +31,7 @@ public class Factura {
     private Long id;
 
     @Schema(description = "ID del cliente (vive en cliente_service)", example = "3")
-    @Column(nullable = false)
+    @Column(name = "cliente_id", nullable = false)
     private Long clienteId;
 
     @Schema(description = "Fecha de emisión")

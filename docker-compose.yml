@@ -1,0 +1,193 @@
+# ============================================================
+#  AnimaLink - Orquestación completa con Docker Compose
+#  Levanta: MySQL + 9 microservicios + API Gateway
+#  Uso:  docker compose up --build
+# ============================================================
+name: animalink
+
+# Variables comunes de conexión a la base de datos (se reutilizan con *db-env)
+x-db-env: &db-env
+  SPRING_PROFILES_ACTIVE: dev
+  SPRING_DATASOURCE_USERNAME: root
+  SPRING_DATASOURCE_PASSWORD: root
+
+services:
+
+  # ---------------- Base de datos (una instancia MySQL con 9 esquemas) --------
+  mysql:
+    image: mysql:8.4
+    container_name: animalink-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d:ro   # crea las 9 bases al iniciar
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ---------------- Microservicios ---------------------------------------------
+  auth-service:
+    build: ./auth_service
+    container_name: auth-service
+    environment:
+      <<: *db-env
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/animalink_auth?createDatabaseIfNotExist=true&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false"
+    ports:
+      - "8081:8081"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  usuario-service:
+    build: ./usuario_service
+    container_name: usuario-service
+    environment:
+      <<: *db-env
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/animalink_usuario?createDatabaseIfNotExist=true&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false"
+    ports:
+      - "8082:8082"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  cliente-service:
+    build: ./cliente_service
+    container_name: cliente-service
+    environment:
+      <<: *db-env
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/animalink_cliente?createDatabaseIfNotExist=true&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false"
+    ports:
+      - "8083:8083"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  inventario-service:
+    build: ./inventario_service
+    container_name: inventario-service
+    environment:
+      <<: *db-env
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/animalink_inventario?createDatabaseIfNotExist=true&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false"
+    ports:
+      - "8088:8088"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # ---- Servicios que se comunican con otros (WebClient apunta a los contenedores) ----
+  mascota-service:
+    build: ./mascota_service
+    container_name: mascota-service
+    environment:
+      <<: *db-env
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/animalink_mascota?createDatabaseIfNotExist=true&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false"
+      SERVICES_CLIENTE_URL: "http://cliente-service:8083"
+    ports:
+      - "8084:8084"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      cliente-service:
+        condition: service_started
+
+  cita-service:
+    build: ./cita_service
+    container_name: cita-service
+    environment:
+      <<: *db-env
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/animalink_cita?createDatabaseIfNotExist=true&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false"
+      SERVICES_MASCOTA_URL: "http://mascota-service:8084"
+      SERVICES_USUARIO_URL: "http://usuario-service:8082"
+    ports:
+      - "8085:8085"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      mascota-service:
+        condition: service_started
+      usuario-service:
+        condition: service_started
+
+  historial-service:
+    build: ./historial_service
+    container_name: historial-service
+    environment:
+      <<: *db-env
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/animalink_historial?createDatabaseIfNotExist=true&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false"
+      SERVICES_MASCOTA_URL: "http://mascota-service:8084"
+    ports:
+      - "8086:8086"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      mascota-service:
+        condition: service_started
+
+  control-alta-service:
+    build: ./control_alta_service
+    container_name: control-alta-service
+    environment:
+      <<: *db-env
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/animalink_control_alta?createDatabaseIfNotExist=true&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false"
+      SERVICES_MASCOTA_URL: "http://mascota-service:8084"
+    ports:
+      - "8087:8087"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      mascota-service:
+        condition: service_started
+
+  factura-service:
+    build: ./factura_service
+    container_name: factura-service
+    environment:
+      <<: *db-env
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/animalink_factura?createDatabaseIfNotExist=true&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false"
+      SERVICES_CLIENTE_URL: "http://cliente-service:8083"
+      SERVICES_INVENTARIO_URL: "http://inventario-service:8088"
+    ports:
+      - "8089:8089"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      cliente-service:
+        condition: service_started
+      inventario-service:
+        condition: service_started
+
+  # ---------------- API Gateway (punto de entrada unico) -----------------------
+  gateway:
+    build: ./gate-way
+    container_name: gateway
+    environment:
+      AUTH_URL: "http://auth-service:8081"
+      USUARIO_URL: "http://usuario-service:8082"
+      CLIENTE_URL: "http://cliente-service:8083"
+      MASCOTA_URL: "http://mascota-service:8084"
+      CITA_URL: "http://cita-service:8085"
+      HISTORIAL_URL: "http://historial-service:8086"
+      CONTROL_ALTA_URL: "http://control-alta-service:8087"
+      INVENTARIO_URL: "http://inventario-service:8088"
+      FACTURA_URL: "http://factura-service:8089"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - auth-service
+      - usuario-service
+      - cliente-service
+      - mascota-service
+      - cita-service
+      - historial-service
+      - control-alta-service
+      - inventario-service
+      - factura-service
+
+volumes:
+  mysql_data:

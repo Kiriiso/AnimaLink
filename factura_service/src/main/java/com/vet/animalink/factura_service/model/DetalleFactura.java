@@ -32,7 +32,7 @@ public class DetalleFactura {
     private Factura factura;
 
     @Schema(description = "ID del insumo (vive en inventario_service)", example = "4")
-    @Column(nullable = false)
+    @Column(name = "insumo_id", nullable = false)
     private Long insumoId;
 
     @Schema(description = "Descripción del insumo", example = "Amoxicilina 500mg")
@@ -43,7 +43,7 @@ public class DetalleFactura {
     private Integer cantidad;
 
     @Schema(description = "Precio unitario (tomado de inventario_service)", example = "2500.00")
-    @Column(nullable = false, precision = 10, scale = 2)
+    @Column(name = "precio_unitario", nullable = false, precision = 10, scale = 2)
     private BigDecimal precioUnitario;
 
     @Schema(description = "Subtotal (cantidad * precioUnitario)", example = "5000.00")

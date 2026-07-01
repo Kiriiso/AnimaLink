@@ -37,7 +37,8 @@ class UsuarioControllerTest {
     @BeforeEach
     void setUp() {
         UsuarioMapper mapper = new UsuarioMapper();
-        UsuarioController controller = new UsuarioController(usuarioService, mapper);
+        UsuarioController controller = new UsuarioController(usuarioService, mapper,
+                new com.vet.animalink.usuario_service.assembler.UsuarioModelAssembler());
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();

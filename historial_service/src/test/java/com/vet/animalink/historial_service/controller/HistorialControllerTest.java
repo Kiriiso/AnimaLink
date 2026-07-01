@@ -40,7 +40,8 @@ class HistorialControllerTest {
     @BeforeEach
     void setUp() {
         HistorialMapper mapper = new HistorialMapper();
-        HistorialController controller = new HistorialController(historialService, mapper);
+        HistorialController controller = new HistorialController(historialService, mapper,
+                new com.vet.animalink.historial_service.assembler.HistorialModelAssembler());
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();

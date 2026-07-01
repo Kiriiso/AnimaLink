@@ -28,15 +28,15 @@ public class Cita {
     private Long id;
 
     @Schema(description = "ID de la mascota (vive en mascota_service)", example = "5")
-    @Column(nullable = false)
+    @Column(name = "mascota_id", nullable = false)
     private Long mascotaId;
 
     @Schema(description = "ID del veterinario (vive en usuario_service)", example = "2")
-    @Column(nullable = false)
+    @Column(name = "veterinario_id", nullable = false)
     private Long veterinarioId;
 
     @Schema(description = "Fecha y hora de la cita", example = "2026-07-15T10:30:00")
-    @Column(nullable = false)
+    @Column(name = "fecha_hora", nullable = false)
     private LocalDateTime fechaHora;
 
     @Schema(description = "Motivo de la consulta", example = "Vacunación anual")

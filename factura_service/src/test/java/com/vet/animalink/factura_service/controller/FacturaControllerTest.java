@@ -44,7 +44,8 @@ class FacturaControllerTest {
     @BeforeEach
     void setUp() {
         FacturaMapper mapper = new FacturaMapper();
-        FacturaController controller = new FacturaController(facturaService, mapper);
+        FacturaController controller = new FacturaController(facturaService, mapper,
+                new com.vet.animalink.factura_service.assembler.FacturaModelAssembler());
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
@@ -62,7 +63,7 @@ class FacturaControllerTest {
 
     @Test
     void emitir_valido_devuelve201() throws Exception {
-        when(facturaService.emitir(any(FacturaRequest.class))).thenReturn(factura);
+        when(facturaService.emitir(any(FacturaRequest.class), any())).thenReturn(factura);
 
         FacturaRequest request = new FacturaRequest(3L,
                 List.of(new FacturaRequest.ItemRequest(4L, 2)));

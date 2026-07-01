@@ -1,5 +1,6 @@
 package com.vet.animalink.historial_service.controller;
 
+import com.vet.animalink.historial_service.assembler.HistorialModelAssembler;
 import com.vet.animalink.historial_service.dto.ApiResponse;
 import com.vet.animalink.historial_service.dto.HistorialRequest;
 import com.vet.animalink.historial_service.dto.HistorialResponse;
@@ -9,6 +10,8 @@ import com.vet.animalink.historial_service.service.HistorialService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,29 +25,32 @@ public class HistorialController {
 
     private final HistorialService historialService;
     private final HistorialMapper historialMapper;
+    private final HistorialModelAssembler assembler;
 
-    public HistorialController(HistorialService historialService, HistorialMapper historialMapper) {
+    public HistorialController(HistorialService historialService, HistorialMapper historialMapper,
+                               HistorialModelAssembler assembler) {
         this.historialService = historialService;
         this.historialMapper = historialMapper;
+        this.assembler = assembler;
     }
 
-    @Operation(summary = "Listar todas las entradas del historial")
+    @Operation(summary = "Listar todas las entradas del historial (con enlaces HATEOAS)")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<HistorialResponse>>> listar() {
-        List<HistorialResponse> data = historialService.listar().stream()
+    public ResponseEntity<ApiResponse<CollectionModel<EntityModel<HistorialResponse>>>> listar() {
+        List<HistorialResponse> lista = historialService.listar().stream()
                 .map(historialMapper::toResponse)
                 .toList();
-        String msg = data.isEmpty() ? "No hay historiales registrados" : "Se encontraron " + data.size() + " registro(s)";
-        return ResponseEntity.ok(ApiResponse.ok(msg, data));
+        String msg = lista.isEmpty() ? "No hay historiales registrados" : "Se encontraron " + lista.size() + " registro(s)";
+        return ResponseEntity.ok(ApiResponse.ok(msg, assembler.toCollection(lista)));
     }
 
-    @Operation(summary = "Obtener una entrada del historial por su ID")
+    @Operation(summary = "Obtener una entrada del historial por su ID (con enlaces HATEOAS)")
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<HistorialResponse>> obtener(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<EntityModel<HistorialResponse>>> obtener(@PathVariable Long id) {
         Historial historial = historialService.obtenerPorId(id);
         HistorialResponse data = historialMapper.toResponse(
                 historial, historialService.obtenerMascota(historial.getMascotaId()).orElse(null));
-        return ResponseEntity.ok(ApiResponse.ok("Historial encontrado correctamente", data));
+        return ResponseEntity.ok(ApiResponse.ok("Historial encontrado correctamente", assembler.toModel(data)));
     }
 
     @Operation(summary = "Registrar una entrada del historial (valida que la mascota exista)")

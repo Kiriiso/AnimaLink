@@ -46,19 +46,20 @@ public class Insumo {
     private Integer stock = 0;
 
     @Schema(description = "Stock mínimo de alerta", example = "10")
-    @Column(nullable = false)
+    @Column(name = "stock_minimo", nullable = false)
     @Builder.Default
     private Integer stockMinimo = 5;
 
     @Schema(description = "Precio de COSTO (dato sensible, NO se expone)", example = "1500.00")
-    @Column(precision = 10, scale = 2)
+    @Column(name = "precio_costo", precision = 10, scale = 2)
     private BigDecimal precioCosto;
 
     @Schema(description = "Precio de venta al público", example = "2500.00")
-    @Column(nullable = false, precision = 10, scale = 2)
+    @Column(name = "precio_venta", nullable = false, precision = 10, scale = 2)
     private BigDecimal precioVenta;
 
     @Schema(description = "Fecha de vencimiento", example = "2027-01-31")
+    @Column(name = "fecha_vencimiento")
     private LocalDate fechaVencimiento;
 
     @Column(nullable = false)

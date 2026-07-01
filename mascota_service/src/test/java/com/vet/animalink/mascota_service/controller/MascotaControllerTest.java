@@ -41,7 +41,8 @@ class MascotaControllerTest {
     @BeforeEach
     void setUp() {
         MascotaMapper mapper = new MascotaMapper();
-        MascotaController controller = new MascotaController(mascotaService, mapper);
+        MascotaController controller = new MascotaController(mascotaService, mapper,
+                new com.vet.animalink.mascota_service.assembler.MascotaModelAssembler());
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();

@@ -46,7 +46,7 @@ public class FacturaService {
      * calcula el total y descuenta el stock de cada insumo.
      */
     @Transactional
-    public Factura emitir(FacturaRequest request) {
+    public Factura emitir(FacturaRequest request, String authorizationHeader) {
         // 1) El cliente debe existir (cliente_service)
         clienteClient.obtenerCliente(request.clienteId())
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -78,8 +78,9 @@ public class FacturaService {
                     .build();
             factura.agregarDetalle(detalle);
 
-            // Descontar stock en inventario_service (escritura entre microservicios)
-            insumoClient.descontarStock(item.insumoId(), item.cantidad());
+            // Descontar stock en inventario_service (escritura entre microservicios),
+            // reenviando el token del usuario que emite la factura.
+            insumoClient.descontarStock(item.insumoId(), item.cantidad(), authorizationHeader);
 
             total = total.add(subtotal);
         }
