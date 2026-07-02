@@ -1,6 +1,7 @@
 package com.vet.animalink.usuario_service.dto;
 
 import com.vet.animalink.usuario_service.model.enums.Rol;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -29,6 +30,6 @@ public record UsuarioRequest(
         @NotNull(message = "El rol es obligatorio")
         Rol rol,
 
-        @Schema(description = "Especialidad (solo para veterinarios)")
+        @Schema(description = "Especialidad (solo para veterinarios)") //arreglar para que no sea mas estricto
         String especialidad
 ) {}

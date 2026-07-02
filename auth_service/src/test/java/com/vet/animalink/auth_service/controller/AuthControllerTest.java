@@ -1,5 +1,19 @@
 package com.vet.animalink.auth_service.controller;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import org.mockito.Mock;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vet.animalink.auth_service.dto.AuthResponse;
 import com.vet.animalink.auth_service.dto.LoginRequest;
@@ -7,19 +21,6 @@ import com.vet.animalink.auth_service.dto.RegisterRequest;
 import com.vet.animalink.auth_service.exception.GlobalExceptionHandler;
 import com.vet.animalink.auth_service.model.Rol;
 import com.vet.animalink.auth_service.service.UsuarioAuthService;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
 class AuthControllerTest {
@@ -43,7 +44,8 @@ class AuthControllerTest {
         when(usuarioAuthService.register(any(RegisterRequest.class)))
                 .thenReturn(new AuthResponse("jwt-token", "nuevo", "VETERINARIO"));
 
-        RegisterRequest req = new RegisterRequest("nuevo", "clave123", Rol.VETERINARIO);
+        RegisterRequest req = new RegisterRequest("nuevo", "clave123", Rol.VETERINARIO,
+        "12345678-9", "Nombre", "Apellido", "nuevo@test.cl", "912345678", "General");
 
         mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)

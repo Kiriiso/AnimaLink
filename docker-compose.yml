@@ -38,11 +38,16 @@ services:
     environment:
       <<: *db-env
       SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/animalink_auth?createDatabaseIfNotExist=true&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false"
+      USUARIO_URL: "http://usuario-service:8082"
+      SERVICE_ACCOUNT_USERNAME: "sistema-interno"
+      SERVICE_ACCOUNT_PASSWORD: "ClaveSegura123!"
     ports:
       - "8081:8081"
     depends_on:
       mysql:
         condition: service_healthy
+      usuario-service:
+        condition: service_started
 
   usuario-service:
     build: ./usuario_service

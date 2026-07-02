@@ -1,5 +1,7 @@
 package com.vet.animalink.auth_service.model;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -14,8 +16,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "usuario_auth")
@@ -32,6 +32,9 @@ public class UsuarioAuth {
 
     @Column(nullable = false, unique = true)
     private String username;
+
+    @Column(name = "usuario_id", nullable = false, unique = true)
+    private Long usuarioId;
 
     @Column(nullable = false)
     private String password;

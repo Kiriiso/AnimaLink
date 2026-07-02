@@ -1,24 +1,28 @@
 package com.vet.animalink.auth_service.service;
 
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import com.vet.animalink.auth_service.client.UsuarioClient;
 import com.vet.animalink.auth_service.dto.AuthResponse;
 import com.vet.animalink.auth_service.dto.LoginRequest;
 import com.vet.animalink.auth_service.dto.RegisterRequest;
 import com.vet.animalink.auth_service.model.Rol;
 import com.vet.animalink.auth_service.model.UsuarioAuth;
 import com.vet.animalink.auth_service.repository.UsuarioAuthRepository;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UsuarioAuthServiceTest {
@@ -29,14 +33,19 @@ class UsuarioAuthServiceTest {
     private PasswordEncoder passwordEncoder;
     @Mock
     private JwtService jwtService;
+    @Mock
+    private UsuarioClient usuarioClient;
 
     @InjectMocks
     private UsuarioAuthService service;
 
     @Test
     void register_nuevo_devuelveToken() {
-        RegisterRequest req = new RegisterRequest("nuevo", "clave123", Rol.VETERINARIO);
+        RegisterRequest req = new RegisterRequest("nuevo", "clave123", Rol.VETERINARIO,
+                "12345678-9", "Nombre", "Apellido", "nuevo@test.cl", "912345678", "General");
+
         when(repository.existsByUsername("nuevo")).thenReturn(false);
+        when(usuarioClient.crearPerfil(req)).thenReturn(100L);
         when(passwordEncoder.encode("clave123")).thenReturn("ENC");
         when(repository.save(any(UsuarioAuth.class))).thenAnswer(inv -> inv.getArgument(0));
         when(jwtService.generateToken(any(UsuarioAuth.class))).thenReturn("jwt-token");
@@ -46,16 +55,19 @@ class UsuarioAuthServiceTest {
         assertEquals("jwt-token", res.token());
         assertEquals("nuevo", res.username());
         assertEquals("VETERINARIO", res.rol());
-        // la contraseña debe guardarse ENCRIPTADA, no en texto plano
         verify(passwordEncoder).encode("clave123");
+        verify(usuarioClient).crearPerfil(req);
     }
 
     @Test
     void register_usernameExistente_lanzaError() {
-        RegisterRequest req = new RegisterRequest("admin", "x", Rol.ADMIN);
+        RegisterRequest req = new RegisterRequest("admin", "x", Rol.ADMIN,
+                "87654321-0", "Admin", "Uno", "admin@test.cl", null, null);
+
         when(repository.existsByUsername("admin")).thenReturn(true);
         assertThrows(IllegalArgumentException.class, () -> service.register(req));
         verify(repository, never()).save(any());
+        verify(usuarioClient, never()).crearPerfil(any());
     }
 
     @Test

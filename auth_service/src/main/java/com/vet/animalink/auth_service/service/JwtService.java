@@ -1,17 +1,20 @@
 package com.vet.animalink.auth_service.service;
 
-import com.vet.animalink.auth_service.model.UsuarioAuth;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
-import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+
+import javax.crypto.SecretKey;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import com.vet.animalink.auth_service.model.UsuarioAuth;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 
 @Service
 public class JwtService {
@@ -25,7 +28,7 @@ public class JwtService {
     public String generateToken(UsuarioAuth usuario) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("rol", usuario.getRol().name());
-        claims.put("userId", usuario.getId());
+        claims.put("userId", usuario.getUsuarioId());
 
         return Jwts.builder()
                 .claims(claims)

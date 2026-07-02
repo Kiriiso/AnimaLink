@@ -1,17 +1,18 @@
 package com.vet.animalink.control_alta_service.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.vet.animalink.control_alta_service.client.MascotaClient;
 import com.vet.animalink.control_alta_service.client.dto.MascotaDTO;
 import com.vet.animalink.control_alta_service.exception.ResourceNotFoundException;
 import com.vet.animalink.control_alta_service.model.ControlAlta;
 import com.vet.animalink.control_alta_service.model.enums.EstadoControl;
 import com.vet.animalink.control_alta_service.repository.ControlAltaRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ControlAltaService {
