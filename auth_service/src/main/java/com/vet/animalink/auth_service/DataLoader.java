@@ -10,13 +10,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Locale;
 
-/**
- * Crea usuarios de prueba con contraseñas ENCRIPTADAS (BCrypt) usando DataFaker.
- * Incluye 3 cuentas fijas para poder iniciar sesión de inmediato:
- *   admin / admin123   (ADMIN)
- *   vet   / vet123     (VETERINARIO)
- *   recep / recep123   (RECEPCIONISTA)
- */
 @Component
 public class DataLoader implements CommandLineRunner {
 
@@ -34,24 +27,30 @@ public class DataLoader implements CommandLineRunner {
             return;
         }
 
-        crear("admin", "admin123", Rol.ADMIN);
-        crear("vet", "vet123", Rol.VETERINARIO);
-        crear("recep", "recep123", Rol.RECEPCIONISTA);
+        // Asignamos IDs fijos ficticios (1L, 2L, 3L) para los usuarios iniciales
+        crear(1L, "admin", "admin123", Rol.ADMIN);
+        crear(2L, "vet", "vet123", Rol.VETERINARIO);
+        crear(3L, "recep", "recep123", Rol.RECEPCIONISTA);
 
         // Usuarios adicionales aleatorios
         Faker faker = new Faker(Locale.forLanguageTag("es"));
         Rol[] roles = Rol.values();
         for (int i = 1; i <= 5; i++) {
             String username = faker.internet().username() + i;
-            crear(username, "password" + i, roles[faker.number().numberBetween(0, roles.length)]);
+            // Para evitar duplicados en la restricción UNIQUE, sumamos al contador
+            Long mockUsuarioId = 3L + i; 
+            
+            crear(mockUsuarioId, username, "password" + i, roles[faker.number().numberBetween(0, roles.length)]);
         }
     }
 
-    private void crear(String username, String passwordPlano, Rol rol) {
+    // 1. Añadimos el parámetro Long usuarioId al método
+    private void crear(Long usuarioId, String username, String passwordPlano, Rol rol) {
         UsuarioAuth usuario = UsuarioAuth.builder()
                 .username(username)
-                .password(passwordEncoder.encode(passwordPlano)) // se guarda ENCRIPTADA
+                .password(passwordEncoder.encode(passwordPlano))
                 .rol(rol)
+                .usuarioId(usuarioId) // 
                 .activo(true)
                 .build();
         repository.save(usuario);

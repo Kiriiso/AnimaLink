@@ -33,7 +33,7 @@ public class UsuarioAuth {
     @Column(nullable = false, unique = true)
     private String username;
 
-    @Column(name = "usuario_id", nullable = false, unique = true)
+    @Column(name = "usuario_id", nullable = true, unique = true)
     private Long usuarioId;
 
     @Column(nullable = false)
