@@ -167,18 +167,6 @@ services:
       inventario-service:
         condition: service_started
 
-  historico-service:
-    build: ./historico_service
-    container_name: historico-service
-    environment:
-      <<: *db-env
-      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/animalink_historico?createDatabaseIfNotExist=true&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false"
-    ports:
-      - "8090:8090"
-    depends_on:
-      mysql:
-        condition: service_healthy
-
   gateway:
     build: ./gate-way
     container_name: gateway
@@ -192,7 +180,6 @@ services:
       CONTROL_ALTA_URL: "http://control-alta-service:8087"
       INVENTARIO_URL: "http://inventario-service:8088"
       FACTURA_URL: "http://factura-service:8089"
-      HISTORICO_URL: "http://historico-service:8090"
     ports:
       - "8080:8080"
     depends_on:
@@ -205,7 +192,6 @@ services:
       - control-alta-service
       - inventario-service
       - factura-service
-      - historico-service
 
 volumes:
   mysql_data:
