@@ -52,7 +52,7 @@ public class MascotaController {
         MascotaResponse data = mascotaService.obtenerDueno(mascota.getClienteId())
                 .map(dueno -> mascotaMapper.toResponse(mascota, dueno))
                 .orElseGet(() -> mascotaMapper.toResponse(mascota));
-        return ResponseEntity.ok(ApiResponse.ok("Mascota encontrada correctamente", assembler.toModel(data)));
+        return ResponseEntity.ok(ApiResponse.ok("Mascota encontrada correctamente", assembler.toModel(data))); 
     }
 
     @Operation(summary = "Registrar una nueva mascota (valida que el dueño exista)")
