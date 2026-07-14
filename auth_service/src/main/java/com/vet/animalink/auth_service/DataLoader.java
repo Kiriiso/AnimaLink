@@ -27,32 +27,36 @@ public class DataLoader implements CommandLineRunner {
             return;
         }
 
-        // Asignamos IDs fijos ficticios (1L, 2L, 3L) para los usuarios iniciales
-        crear(1L, "admin", "admin123", Rol.ADMIN);
-        crear(2L, "vet", "vet123", Rol.VETERINARIO);
-        crear(3L, "recep", "recep123", Rol.RECEPCIONISTA);
+        // 1. Cuenta de servicio obligatoria para la comunicación entre microservicios
+        crear("sistema-interno", "ClaveSegura123!", Rol.ADMIN, 0L);
 
-        // Usuarios adicionales aleatorios
+        // 2. Usuarios base de prueba
+        crear("admin", "admin123", Rol.ADMIN, 1L);
+        crear("vet", "vet123", Rol.VETERINARIO, 2L);
+        crear("recep", "recep123", Rol.RECEPCIONISTA, 3L);
+
+        // 3. Usuarios aleatorios adicionales
         Faker faker = new Faker(Locale.forLanguageTag("es"));
         Rol[] roles = Rol.values();
+        long usuarioIdCounter = 4L;
+
         for (int i = 1; i <= 5; i++) {
             String username = faker.internet().username() + i;
-            // Para evitar duplicados en la restricción UNIQUE, sumamos al contador
-            Long mockUsuarioId = 3L + i; 
+            Rol rolAleatorio = roles[faker.number().numberBetween(0, roles.length)];
             
-            crear(mockUsuarioId, username, "password" + i, roles[faker.number().numberBetween(0, roles.length)]);
+            crear(username, "password" + i, rolAleatorio, usuarioIdCounter++);
         }
     }
 
-    // 1. Añadimos el parámetro Long usuarioId al método
-    private void crear(Long usuarioId, String username, String passwordPlano, Rol rol) {
+    private void crear(String username, String passwordPlano, Rol rol, Long usuarioId) {
         UsuarioAuth usuario = UsuarioAuth.builder()
                 .username(username)
                 .password(passwordEncoder.encode(passwordPlano))
                 .rol(rol)
-                .usuarioId(usuarioId) // 
+                .usuarioId(usuarioId)
                 .activo(true)
                 .build();
+
         repository.save(usuario);
     }
 }
